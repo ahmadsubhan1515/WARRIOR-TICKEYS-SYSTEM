@@ -53,10 +53,10 @@
       const j = await r.json();
       const s = j.snapshot || {};
       snap.innerHTML = `
-        <div class="stat mini"><b>${s.latency_ms ?? "—"}</b><span class="muted">ms ping</span></div>
-        <div class="stat mini"><b>${s.guild_member_count ?? "—"}</b><span class="muted">members</span></div>
-        <div class="stat mini"><b>${j.open ?? "—"}</b><span class="muted">open tickets</span></div>
-        <div class="stat mini"><b>${(j.counts && j.counts.logs) ?? "—"}</b><span class="muted">log rows</span></div>
+        <div class="stat mini stat-glow"><b>${s.latency_ms ?? "—"}</b><span class="muted">Latency (ms)</span></div>
+        <div class="stat mini stat-glow"><b>${s.guild_member_count ?? "—"}</b><span class="muted">Members</span></div>
+        <div class="stat mini stat-glow"><b>${j.open ?? "—"}</b><span class="muted">Open (sync)</span></div>
+        <div class="stat mini stat-glow"><b>${(j.counts && j.counts.logs) ?? "—"}</b><span class="muted">Log rows</span></div>
       `;
     } catch {
       snap.textContent = "Snapshot unavailable.";

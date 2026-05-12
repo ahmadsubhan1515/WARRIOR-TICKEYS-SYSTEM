@@ -1,15 +1,18 @@
 {% extends "base.html" %}
-{% block title %}WARRIOR TICKET - BY ♔warrior父SUBHAN♔{% endblock %}
+{% block title %}WARRIOR TICKET — Dashboard{% endblock %}
+{% block body_class %}page-dashboard{% endblock %}
 {% block body %}
 <div id="global-progress" class="global-progress" aria-hidden="true"><div class="global-progress-bar"></div></div>
 
 <header class="topbar">
   <div class="brand">
-    <span class="brand-mark"></span>
-    <span>WARRIOR TICKET</span>
-    <span class="pill">Guild {{ guild_id }}</span>
+    <span class="brand-mark" aria-hidden="true"></span>
+    <div class="brand-text">
+      <span class="brand-name">WARRIOR TICKET</span>
+      <span class="brand-meta muted">Guild {{ guild_id }}</span>
+    </div>
   </div>
-  <div class="row">
+  <div class="row topbar-actions">
     <span class="pill {% if cfg.bot_paused %}bad{% else %}ok{% endif %}">
       {% if cfg.bot_paused %}Paused{% else %}Live{% endif %}
     </span>
@@ -17,42 +20,62 @@
   </div>
 </header>
 
-<nav class="dash-nav">
+<nav class="dash-nav" aria-label="Dashboard sections">
   <a href="#overview">Overview</a>
   <a href="#bot-stats">Bot stats</a>
-  <a href="#panel">Panel editor</a>
+  <a href="#panel">Panel</a>
   <a href="#roles">Roles</a>
   <a href="#core">Channels</a>
   <a href="#console">Console</a>
 </nav>
 
 <main class="shell shell-animate" data-live-console="1">
-  <section id="overview" class="card anchor-card">
-    <h2>Overview</h2>
-    <p class="muted">TICKETS INFORMATION</p>
-    <div class="stats-row">
-      <div class="stat"><b>{{ open_tickets|length }}</b><span class="muted">Open Tickets</span></div>
-      <div class="stat"><b>{{ stats.get('tickets_created_total', 0) }}</b><span class="muted">Created (total)</span></div>
-      <div class="stat"><b>{{ stats.get('tickets_closed_total', 0) }}</b><span class="muted">Closed (total)</span></div>
-      <div class="stat"><b>{{ counts.collections }}</b><span class="muted">MongoDB Collections</span></div>
-    </div>
-  </section>
+  <div class="dash-top-grid">
+    <section id="overview" class="card anchor-card dash-card-elevated">
+      <div class="card-head">
+        <div>
+          <h2>Overview</h2>
+          <p class="muted card-desc">Ticket totals and database footprint.</p>
+        </div>
+        <form
+          method="post"
+          action="{{ url_for('reset_overview_metrics') }}"
+          data-ajax="1"
+          class="card-head-actions"
+          onsubmit="return confirm('Reset Overview counters and Bot stats snapshot in MongoDB? Open tickets, logs, and settings are not removed.');"
+        >
+          <button type="submit" class="btn btn-danger btn-compact">Reset MongoDB Data</button>
+        </form>
+      </div>
+      <div class="stats-row stats-row-tight">
+        <div class="stat stat-glow"><b>{{ open_tickets|length }}</b><span class="muted">Open tickets</span></div>
+        <div class="stat stat-glow"><b>{{ stats.get('tickets_created_total', 0) }}</b><span class="muted">Created (total)</span></div>
+        <div class="stat stat-glow"><b>{{ stats.get('tickets_closed_total', 0) }}</b><span class="muted">Closed (total)</span></div>
+        <div class="stat stat-glow"><b>{{ counts.collections }}</b><span class="muted">Collections</span></div>
+      </div>
+    </section>
 
-  <section id="bot-stats" class="card anchor-card">
-    <h2>Bot stats <span class="muted" style="font-weight:400;text-transform:none">Active</span></h2>
-    <p class="muted">BOT INFORMATION</p>
-    <div id="live-snapshot" class="stats-row">
-      <div class="stat mini"><b>{{ snap.get('latency_ms', '—') }}</b><span class="muted">Latency</span></div>
-      <div class="stat mini"><b>{{ snap.get('guild_member_count', '—') }}</b><span class="muted">Server Members</span></div>
-      <div class="stat mini"><b>{{ snap.get('open_ticket_count', open_tickets|length) }}</b><span class="muted">Server Tickets</span></div>
-      <div class="stat mini"><b>{{ counts.logs }}</b><span class="muted">Log Rows</span></div>
-    </div>
-    <p class="muted" style="margin-top:10px">Last Updated: {{ snap.get('updated_at') or '—' }}</p>
-  </section>
+    <section id="bot-stats" class="card anchor-card dash-card-elevated">
+      <div class="card-head card-head--simple">
+        <div>
+          <h2>Bot stats <span class="live-pill">Live</span></h2>
+          <p class="muted card-desc">Refreshed periodically from the bot process.</p>
+        </div>
+      </div>
+      <div id="live-snapshot" class="stats-row stats-row-tight">
+        <div class="stat mini stat-glow"><b>{{ snap.get('latency_ms', '—') }}</b><span class="muted">Latency (ms)</span></div>
+        <div class="stat mini stat-glow"><b>{{ snap.get('guild_member_count', '—') }}</b><span class="muted">Members</span></div>
+        <div class="stat mini stat-glow"><b>{{ snap.get('open_ticket_count', open_tickets|length) }}</b><span class="muted">Open (sync)</span></div>
+        <div class="stat mini stat-glow"><b>{{ counts.logs }}</b><span class="muted">Log rows</span></div>
+      </div>
+      <p class="muted snap-updated">Last snapshot: {{ snap.get('updated_at') or '—' }}</p>
+    </section>
+  </div>
 
-  <section class="card">
+  <section class="card anchor-card">
     <h2>Open tickets</h2>
-    <div style="overflow:auto">
+    <p class="muted card-desc">Active channels tracked in MongoDB.</p>
+    <div class="table-wrap">
       <table>
         <thead>
           <tr>
@@ -84,7 +107,7 @@
 
   <section id="panel" class="card anchor-card">
     <h2>Panel editor</h2>
-    <p class="muted">Edit the panel settings for the ticket system.</p>
+    <p class="muted card-desc">Ticket panel embed, dropdown, buttons, and close DM.</p>
 
     <h3 class="subh">Embed images & author</h3>
     <form method="post" action="{{ url_for('save_panel_embed') }}" data-ajax="1">
@@ -106,7 +129,7 @@
           <input name="author_icon_url" type="text" value="{{ (cfg.panel_embed or {}).get('author_icon_url', '') }}" />
         </div>
       </div>
-      <div style="margin-top:12px"><button class="btn btn-primary" type="submit">Save</button></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save</button></div>
     </form>
 
     <h3 class="subh">Main text & colors</h3>
@@ -123,69 +146,68 @@
       <textarea name="welcome_body" rows="3">{{ cfg.welcome_body }}</textarea>
       <label>Embed color (decimal)</label>
       <input name="panel_color" type="text" value="{{ cfg.panel_color }}" />
-      <div style="margin-top:12px"><button class="btn btn-primary" type="submit">Save</button></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save</button></div>
     </form>
 
     <h3 class="subh">Dropdown section (JSON)</h3>
-    <p class="muted">Keys: <code>enabled</code>, <code>placeholder</code>, <code>options</code> (each: <code>id</code>, <code>label</code>, <code>description</code>, <code>emoji</code>, optional <code>category_id</code>).</p>
+    <p class="muted small-print">Keys: <code>enabled</code>, <code>placeholder</code>, <code>options</code> (each: <code>id</code>, <code>label</code>, <code>description</code>, <code>emoji</code>, required <code>category_id</code> — Discord category ID for that ticket type).</p>
     <form method="post" action="{{ url_for('save_dropdown_json') }}" data-ajax="1">
       <textarea name="panel_dropdown_json" rows="16">{{ dd_json }}</textarea>
-      <div style="margin-top:12px"><button class="btn btn-primary" type="submit">Save Dropdown</button></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save dropdown</button></div>
     </form>
 
     <h3 class="subh">Buttons section (JSON)</h3>
-    <p class="muted">Keys: <code>enabled</code>, <code>rows</code>. Each button: <code>id</code>, <code>label</code>, optional <code>emoji</code>, <code>style</code>, <code>type_id</code>, optional <code>category_id</code>.</p>
+    <p class="muted small-print">Keys: <code>enabled</code>, <code>rows</code>. Each button: <code>id</code>, <code>label</code>, optional <code>emoji</code>, <code>style</code>, <code>type_id</code>, required <code>category_id</code>.</p>
     <form method="post" action="{{ url_for('save_buttons_json') }}" data-ajax="1">
       <textarea name="panel_buttons_json" rows="16">{{ pb_json }}</textarea>
-      <div style="margin-top:12px"><button class="btn btn-primary" type="submit">Save Buttons</button></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save buttons</button></div>
     </form>
 
     <h3 class="subh">Close DM (JSON)</h3>
-    <p class="muted">Placeholders: <code>{channel_name}</code> and <code>{reason}</code>. Set <code>enabled</code> false to disable DMs.</p>
+    <p class="muted small-print">Placeholders: <code>{channel_name}</code> and <code>{reason}</code>. Set <code>enabled</code> false to disable DMs.</p>
     <form method="post" action="{{ url_for('save_close_dm_json') }}" data-ajax="1">
       <textarea name="close_dm_json" rows="10">{{ cdm_json }}</textarea>
-      <div style="margin-top:12px"><button class="btn btn-primary" type="submit">Save Close DM</button></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save close DM</button></div>
     </form>
   </section>
 
   <section id="roles" class="card anchor-card">
     <h2>Roles</h2>
-    <p class="muted"><strong>Admin roles</strong> see every ticket.</p>
+    <p class="muted card-desc"><strong>Admin roles</strong> see every ticket. Support matrix maps roles to category IDs.</p>
     <form method="post" action="{{ url_for('save_admin_roles') }}" data-ajax="1">
-      <label>Admin role IDs (space / comma)</label>
+      <label>Admin Role IDs (space / comma)</label>
       <textarea name="admin_role_ids" rows="3">{{ (cfg.admin_role_ids or [])|join(' ') }}</textarea>
-      <div style="margin-top:12px"><button class="btn btn-primary" type="submit">Save admin roles</button></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save admin roles</button></div>
     </form>
-    <form method="post" action="{{ url_for('save_support_matrix') }}" data-ajax="1" style="margin-top:18px">
-      <label>Support roles JSON <span class="muted">(Support matrix maps a role to parent category IDs.)</span></label>
+    <form method="post" action="{{ url_for('save_support_matrix') }}" data-ajax="1" class="form-spaced">
+      <label>Support roles JSON</label>
       <textarea name="support_roles_json" rows="12">{{ sr_json }}</textarea>
-      <div style="margin-top:12px"><button class="btn btn-primary" type="submit">Save Support</button></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save support</button></div>
     </form>
   </section>
 
   <section id="core" class="card anchor-card">
     <h2>Channels & limits</h2>
+    <p class="muted card-desc">Each dropdown option and panel button needs its own <code>category_id</code> in JSON. No global default category.</p>
     <form method="post" action="{{ url_for('save_core') }}" data-ajax="1">
-      <label>Default ticket category ID</label>
-      <input name="ticket_category_id" type="text" value="{{ cfg.ticket_category_id or '' }}" />
       <label>Log channel ID</label>
       <input name="log_channel_id" type="text" value="{{ cfg.log_channel_id or '' }}" />
       <label>Transcript channel ID</label>
       <input name="transcript_channel_id" type="text" value="{{ cfg.transcript_channel_id or '' }}" />
       <label>Max open tickets per user</label>
       <input name="max_open_per_user" type="number" min="1" max="10" value="{{ cfg.max_open_per_user or 3 }}" />
-      <label class="row" style="margin-top:12px">
+      <label class="row row-check">
         <input type="checkbox" name="bot_paused" {% if cfg.bot_paused %}checked{% endif %} />
         <span>Pause new tickets</span>
       </label>
-      <div style="margin-top:12px"><button class="btn btn-primary" type="submit">Save</button></div>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save</button></div>
     </form>
 
     <h3 class="subh">Post panel from dashboard</h3>
     <form method="post" action="{{ url_for('queue_panel') }}" data-ajax="1">
       <label>Text channel ID</label>
       <input name="post_channel_id" type="text" required placeholder="Channel ID" />
-      <div style="margin-top:12px" class="row">
+      <div class="form-actions row">
         <button class="btn btn-primary" type="submit">Queue panel post</button>
         {% if cfg.pending_post_panel_channel_id %}
         <span class="pill">Pending: {{ cfg.pending_post_panel_channel_id }}</span>
@@ -196,26 +218,21 @@
     <h3 class="subh">Blacklist</h3>
     <form method="post" action="{{ url_for('save_blacklist') }}" data-ajax="1">
       <textarea name="blacklist_user_ids" rows="5">{{ (cfg.blacklist_user_ids or [])|join(' ') }}</textarea>
-      <div style="margin-top:12px"><button class="btn btn-primary" type="submit">Save blacklist</button></div>
-    </form>
-
-    <h3 class="subh">Danger</h3>
-    <form method="post" action="{{ url_for('reset_stats') }}" data-ajax="1" onsubmit="return confirm('Reset stats counters in MongoDB?');">
-      <button class="btn" type="submit" style="border-color: rgba(255,77,77,.45)">Reset Bot Settings</button>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save blacklist</button></div>
     </form>
   </section>
 
   <section id="console" class="card anchor-card">
     <h2>Console</h2>
-    <p class="muted">Bot Logs. Refreshes every 4 seconds.</p>
+    <p class="muted card-desc">Recent bot logs (auto-refresh).</p>
     <pre id="console-out" class="console"></pre>
-    <p class="muted" style="margin-top:8px">MongoDB Counts: Tickets={{ counts.open_tickets }}, logs={{ counts.logs }}, collections={{ counts.collections }}</p>
+    <p class="muted small-print" style="margin-top: 10px">MongoDB: open tickets={{ counts.open_tickets }}, logs={{ counts.logs }}, collections={{ counts.collections }}</p>
   </section>
 
-  <section class="card">
+  <section class="card anchor-card card-credits">
     <h2>Credits</h2>
-    <p class="muted">DEVELOPER: <strong>♔warrior父SUBHAN♔</strong></p>
-    <p class="muted">OWNER: <strong>♔warrior父Noob♔</strong></p>
+    <p class="muted">Developer: <strong>♔warrior父SUBHAN♔</strong></p>
+    <p class="muted">Owner: <strong>♔warrior父Noob♔</strong></p>
   </section>
 </main>
 {% endblock %}

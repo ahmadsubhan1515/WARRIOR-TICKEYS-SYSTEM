@@ -135,6 +135,12 @@ def reset_stats() -> None:
     _stats_col().replace_one({"_id": "main"}, st, upsert=True)
 
 
+def reset_overview_dashboard_metrics() -> None:
+    """Reset counters used on Overview + Bot stats (totals + cached live snapshot). Does not delete open tickets or logs."""
+    reset_stats()
+    _meta_col().delete_one({"_id": "snapshot"})
+
+
 def insert_log(level: str, message: str, logger_name: str = "") -> None:
     _logs_col().insert_one(
         {

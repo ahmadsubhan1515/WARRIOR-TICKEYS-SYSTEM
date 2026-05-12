@@ -302,7 +302,6 @@ class TicketsCog(commands.Cog):
         self.bot = bot
 
     async def cog_load(self) -> None:
-        asyncio.create_task(self._register_persistent_views_later())
         asyncio.create_task(self._dashboard_worker())
 
     @commands.Cog.listener()
@@ -381,11 +380,6 @@ class TicketsCog(commands.Cog):
         self.bot.add_view(view, message_id=msg.id)
         return msg
 
-    async def _register_persistent_views_later(self) -> None:
-        await self.bot.wait_until_ready()
-        await asyncio.sleep(1)
-        await self.register_persistent_views()
-
     async def register_persistent_views(self) -> None:
         for t in await _db_list_open():
             cid = int(t.get("channel_id", 0))
@@ -431,10 +425,14 @@ class TicketsCog(commands.Cog):
                 f"You already have {max_open} open ticket(s). Close one first.",
                 ephemeral=True,
             )
-        cat_id = category_id_override if category_id_override is not None else cfg.get("ticket_category_id")
+        try:
+            cat_id = int(category_id_override) if category_id_override is not None else 0
+        except (TypeError, ValueError):
+            cat_id = 0
         if not cat_id:
             return await interaction.response.send_message(
-                "Ticket category is not set (dashboard). For buttons, set category on the option or set default category.",
+                "This ticket type has no **category_id**. Set a Discord category ID on each dropdown option and each "
+                "panel button in the dashboard JSON (there is no global default category anymore).",
                 ephemeral=True,
             )
         category = discord.utils.get(interaction.guild.categories, id=int(cat_id))

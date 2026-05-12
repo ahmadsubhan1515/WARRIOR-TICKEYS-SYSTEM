@@ -53,6 +53,12 @@ class WarriorBot(commands.Bot):
     async def on_ready(self) -> None:
         user = self.user
         log.info("Logged in as %s (%s)", user, user.id if user else "?")
+        cog = self.get_cog("TicketsCog")
+        if cog is not None and hasattr(cog, "register_persistent_views"):
+            try:
+                await cog.register_persistent_views()  # type: ignore[union-attr]
+            except Exception:
+                log.exception("register_persistent_views on_ready")
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching,

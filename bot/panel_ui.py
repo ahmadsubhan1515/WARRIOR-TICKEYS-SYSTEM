@@ -54,6 +54,24 @@ def build_panel_embed(cfg: dict[str, Any]) -> discord.Embed:
     return e
 
 
+def category_id_for_dropdown_type(cfg: dict[str, Any], type_id: str) -> int | None:
+    """Resolve Discord category ID for a dropdown option by its ``id`` (select value)."""
+    dd = cfg.get("panel_dropdown") if isinstance(cfg.get("panel_dropdown"), dict) else {}
+    for row in dd.get("options") or []:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("id", "")) != str(type_id):
+            continue
+        cat = row.get("category_id")
+        if cat is None or not str(cat).strip():
+            return None
+        try:
+            return int(cat)
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
 def _dropdown_options(cfg: dict[str, Any]) -> list[discord.SelectOption]:
     dd = cfg.get("panel_dropdown") if isinstance(cfg.get("panel_dropdown"), dict) else {}
     opts: list[discord.SelectOption] = []
@@ -95,16 +113,19 @@ class PanelSelect(discord.ui.Select):
             placeholder=placeholder[:150] or "Select…",
             min_values=1,
             max_values=1,
-            options=options if options else [discord.SelectOption(label="Support", value="support")],
+            options=options,
         )
         self._open = opener
 
     async def callback(self, interaction: discord.Interaction) -> None:
+        cfg = await interaction.client.get_cfg()
+        tid = self.values[0]
+        cat_i = category_id_for_dropdown_type(cfg, tid)
         await self._open(
             interaction,
-            self.values[0],
+            tid,
             source="dropdown",
-            category_id_override=None,
+            category_id_override=cat_i,
         )
 
 

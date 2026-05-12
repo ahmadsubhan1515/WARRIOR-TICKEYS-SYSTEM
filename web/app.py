@@ -116,7 +116,6 @@ def api_summary() -> Any:
 @login_required
 def save_core() -> Any:
     def mut(d: dict) -> None:
-        d["ticket_category_id"] = _int_or_none(request.form.get("ticket_category_id"))
         d["log_channel_id"] = _int_or_none(request.form.get("log_channel_id"))
         d["transcript_channel_id"] = _int_or_none(request.form.get("transcript_channel_id"))
         d["max_open_per_user"] = max(1, min(10, int(request.form.get("max_open_per_user") or 3)))
@@ -287,6 +286,13 @@ def queue_panel() -> Any:
 @login_required
 def reset_stats() -> Any:
     mongo_db.reset_stats()
+    return redirect(url_for("dashboard"))
+
+
+@app.post("/reset-overview-metrics")
+@login_required
+def reset_overview_metrics() -> Any:
+    mongo_db.reset_overview_dashboard_metrics()
     return redirect(url_for("dashboard"))
 
 

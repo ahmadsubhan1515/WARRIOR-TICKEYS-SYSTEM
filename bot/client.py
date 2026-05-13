@@ -59,12 +59,7 @@ class WarriorBot(commands.Bot):
                 await cog.register_persistent_views()  # type: ignore[union-attr]
             except Exception:
                 log.exception("register_persistent_views on_ready")
-        await self.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.watching,
-                name="WARRIOR Ticket",
-            )
-        )
+
 
     async def config_watcher(self) -> None:
         await self.wait_until_ready()
